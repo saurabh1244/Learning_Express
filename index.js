@@ -4,9 +4,10 @@ const path = require('path');
 const app = express();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const verifyToken = require('./middleware/auth');
+const nodemailer = require('nodemailer');
 
-const SECRET_KEY = 'your_secret_key';
+const verifyToken = require('./middleware/auth');
+const e = require('express');
 
 
 
@@ -16,6 +17,15 @@ app.use(express.json());
 
 
 
+const SECRET_KEY = process.env.SECRET_KEY
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.MY_EMAIL,
+    pass: process.env.MY_EMAIL_PASS
+  }
+});
 
 
 
@@ -31,8 +41,71 @@ app.get('/root', verifyToken, (req, res) => {
 
 
 
-app.post('/', async (req, res) => {
-  const { username, password } = req.body;
+
+app.post('/resend_verification_link', async (req, res) => {
+  const { username, email } = req.body;
+
+  const existingUser = await prisma.user.findUnique({
+    where: { username },
+  });
+
+  if (existingUser) {
+
+    if(existingUser.verified) {
+            return res.status(400).json({ message: "User already verified" });
+    }
+
+    const token = jwt.sign({ id: existingUser.id, email: existingUser.email }, SECRET_KEY, {
+      expiresIn: "15m",
+    });
+    const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+
+    await transporter.sendMail({
+      from: process.env.MY_EMAIL,
+      to: email,
+      subject: "Verify your Email",
+      html: `<h2>Hi ${username}</h2>
+           <p>Click below to verify your email:</p>
+           <a href="${verificationLink}">Verify Now</a>`,
+    });
+
+    res.json({ msg: "Verification email sent!" });
+  } else {
+    return res.status(400).json({ message: "Username not found in Database" });
+  }
+});
+
+
+
+
+
+app.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const user = await prisma.user.update({
+      where: { id: decoded.id },
+      data: { verified: true }
+    });
+
+    const accessToken = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: "1m" });
+
+    return res.status(200).json({
+      message: "Email verified successfully",
+      accessToken,
+  
+    })
+
+  } catch (err) {
+    return res.status(400).send("Invalid or expired token");
+  }
+});
+
+
+
+app.post('/register', async (req, res) => {
+  const { username, password ,email} = req.body;
 
   try {
     const existingUser = await prisma.user.findUnique({
@@ -44,15 +117,24 @@ app.post('/', async (req, res) => {
     }
 
     const user = await prisma.user.create({
-      data: { username, password }
+      data: { username, password,email, verified: false }
     });
 
+     const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: "15m" });
+     const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
 
-    res.status(201).json({
-      message: "User created successfully",
-      user,
-      
-    });
+     await transporter.sendMail({
+    from: process.env.MY_EMAIL,
+    to: email,
+    subject: "Verify your Email",
+    html: `<h2>Hi ${username}</h2>
+           <p>Click below to verify your email:</p>
+           <a href="${verificationLink}">Verify Now</a>`
+  });
+
+
+      res.json({ msg: "Verification email sent!" });
+
 
   } catch (error) {
     console.error(" Error creating user:", error.message);
@@ -130,7 +212,7 @@ app.post('/refresh_token', async (req,res)=>{
         message: "New access token generated successfully",
         access_token: newAccessToken,
       })
-      
+
       }
 
       else{
