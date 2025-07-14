@@ -1,0 +1,10 @@
+npm init -y
+
+npm install express
+
+type nul > index.js
+
+node index.js
+
+
+nodemon index.js

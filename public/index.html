@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>React in HTML</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+  <h1>hello all xxxxxxxx</h1>
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+
+    const App = () => {
+      const [formData, setFormData] = React.useState({
+        username: '',
+        password: '',
+      });
+
+      const [userData, setUserData] = React.useState([]);
+
+      const handleChange = (e) => {
+        setFormData({
+          ...formData,
+          [e.target.name]: e.target.value
+        });
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+
+        axios.post('http://localhost:3000', formData)
+          .then(response => {
+            console.log('✅ Success:', response.data);
+            alert('User created successfully!');
+            setFormData({ username: '', password: '' });
+            getUserData();
+          })
+          .catch((error) => {
+            console.error('❌ Error:', error);
+            alert(error.response?.data?.message || "Submission failed!");
+          });
+      };
+
+       const handleLogin = (e) => {
+        e.preventDefault();
+
+        axios.post('http://localhost:3000/login', formData)
+          .then(response => {
+            console.log(' data get from :', response.data);
+            setFormData({ username: '', password: '' });
+            getUserData();
+          })
+          .catch((error) => {
+            console.error('❌ Error:', error);
+            alert(error.response?.data?.message || "Submission failed!");
+          });
+      };
+
+
+      
+
+      const getUserData = async () => {
+        try {
+          const res = await axios.get("http://localhost:3000/api/users");
+          setUserData(res.data);
+        } catch (err) {
+          console.error("❌ Error fetching users:", err);
+        }
+      };
+
+      React.useEffect(() => {
+        getUserData();
+      }, []);
+
+      return (
+        <>
+
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              value={formData.username}
+              onChange={handleChange}
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            <button type="submit">Submit</button>
+          </form>
+
+          <div>
+            <h3>All Users:</h3>
+            <ul>
+              {userData.map((user, index) => (
+                <li key={user.id}>
+                  {index + 1}. {user.username}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+
+          <div>
+            <h1> LOGIN </h1>
+
+             <form onSubmit={handleLogin}>
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              value={formData.username}
+              onChange={handleChange}
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            <button type="submit">Submit</button>
+          </form>
+            </div>
+        </>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+
+</body>
+</html>
