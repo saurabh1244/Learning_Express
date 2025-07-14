@@ -8,3 +8,10 @@ node index.js
 
 
 nodemon index.js
+
+-after adding any schema in schemas.prisma 
+you have to run this command  = npx prisma migrate dev --name any_commeent
+
+
+-agar kuch naha schema add kiya and pure se conflict aaa rha hai hai to yee command use hota hai 
+isse bold .db delte hoke ke naye se sabhi ko migrate karta hai --npx prisma migrate reset

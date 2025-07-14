@@ -21,6 +21,7 @@
       const [formData, setFormData] = React.useState({
         username: '',
         password: '',
+        email: ''
       });
 
       const [userData, setUserData] = React.useState([]);
@@ -35,11 +36,11 @@
       const handleSubmit = (e) => {
         e.preventDefault();
 
-        axios.post('http://localhost:3000', formData)
+        axios.post('http://localhost:3000/register', formData)
           .then(response => {
             console.log('✅ Success:', response.data);
             alert('User created successfully!');
-            setFormData({ username: '', password: '' });
+            setFormData({ username: '', password: '' ,email: '' });
             getUserData();
           })
           .catch((error) => {
@@ -54,7 +55,7 @@
         axios.post('http://localhost:3000/login', formData)
           .then(response => {
             console.log(' data get from :', response.data);
-            setFormData({ username: '', password: '' });
+            setFormData({ username: '', password: '' ,email: '' });
             getUserData();
           })
           .catch((error) => {
@@ -97,6 +98,15 @@
               value={formData.password}
               onChange={handleChange}
             />
+
+             <input
+              type="email"
+              name="email"
+              placeholder="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+
             <button type="submit">Submit</button>
           </form>
 
@@ -105,7 +115,7 @@
             <ul>
               {userData.map((user, index) => (
                 <li key={user.id}>
-                  {index + 1}. {user.username}
+                  {index + 1}. {user.username} - {user.email} - {user.password}
                 </li>
               ))}
             </ul>
