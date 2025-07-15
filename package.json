@@ -19,6 +19,8 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "prisma": "^6.11.1"
+    "prisma": "^6.11.1",
+    "swagger-autogen": "^2.23.7",
+    "swagger-ui-express": "^5.0.1"
   }
 }
