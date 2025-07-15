@@ -12,11 +12,15 @@ const e = require('express');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger/swagger_output.json');
 
+const { OAuth2Client } = require("google-auth-library");
+
 
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 const SECRET_KEY = process.env.SECRET_KEY
@@ -32,8 +36,62 @@ const transporter = nodemailer.createTransport({
 
 
 
+app.post("/api/google-login", async (req, res) => {
+  const { credential } = req.body;
+  console.log("google login api called with credential:", credential);
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload(); // Google user info
+    console.log("object payload:", payload);
+
+    const { sub, email,given_name,family_name, name, picture ,email_verified} = payload;
+
+    const randomDigits = Math.floor(1000 + Math.random() * 9000); // 1000–9999
+    user_name = given_name + randomDigits
+
+    if (payload) {
+      console.log("Google user authenticated successfully:", email);
+
+     const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!existingUser) {
+
+        const user = await prisma.user.create({
+        data: { username:user_name, f_name:given_name, l_name:family_name, email:email, verified: email_verified,profile_pic_url:picture,provider:"google_Auth" },
+      });
+
+    }
+
+
+
+      // 🎫 Create your own JWT
+      const token = jwt.sign(
+        { id: sub, email, name, picture },
+        process.env.SECRET_KEY,
+        { expiresIn: "1h" }
+      );
+
+      res.json({ token }); // Send JWT to frontend
+    } else {
+      console.log("google auth failed in middle ........");
+    }
+
+  } catch (err) {
+    console.error(err);
+    res.status(401).json({ message: "Invalid Google token" });
+  }
+});
+
+
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // #swagger.tags = ['Protected']
@@ -109,7 +167,7 @@ app.get('/verify-email', async (req, res) => {
 
 
 app.post('/register', async (req, res) => {
-  const { username, password ,email} = req.body;
+  const { username,f_name,l_name, password ,email,profile_pic_url} = req.body;
 
   try {
     const existingUser = await prisma.user.findUnique({
@@ -121,7 +179,7 @@ app.post('/register', async (req, res) => {
     }
 
     const user = await prisma.user.create({
-      data: { username, password,email, verified: false }
+      data: { username, password,f_name,l_name,email, verified: false,profile_pic_url, provider: "local" },
     });
 
      const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: "15m" });

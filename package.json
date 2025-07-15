@@ -13,6 +13,7 @@
   "dependencies": {
     "@prisma/client": "^6.11.1",
     "express": "^5.1.0",
+    "google-auth-library": "^10.1.0",
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.5",

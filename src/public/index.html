@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Login + JWT</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <h2>Sign in with Google</h2>
+
+  <!-- Config hidden div -->
+  <div id="g_id_onload"
+       data-client_id="619376530474-q7a0qjj54dcmasln3aop7060vbom5pvk.apps.googleusercontent.com"
+       data-callback="handleCredentialResponse"
+       data-auto_prompt="false">
+  </div>
+
+  <!-- Actual Google Login Button -->
+  <div class="g_id_signin"
+       data-type="standard"
+       data-size="large"
+       data-theme="outline"
+       data-text="sign_in_with"
+       data-shape="rectangular"
+       data-logo_alignment="left">
+  </div>
+
+  <hr>
+
+  <h3 id="user"></h3>
+  <button onclick="logout()">Logout</button>
+
+  <script>
+    async function handleCredentialResponse(response) {
+      const credential = response.credential;
+
+      const res = await fetch("http://localhost:3000/api/google-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ credential })
+      });
+
+      const data = await res.json();
+
+      if (data.token) {
+        // Save token in localStorage
+        localStorage.setItem("token", data.token);
+        document.getElementById("user").innerText = "Logged in ✔️";
+      } else {
+        document.getElementById("user").innerText = "Login failed ❌";
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      document.getElementById("user").innerText = "Logged out";
+    }
+  </script>
+</body>
+</html>
