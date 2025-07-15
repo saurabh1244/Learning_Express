@@ -11,7 +11,11 @@ model User {
   id       Int     @id @default(autoincrement())
   username String  @unique
   email String? @unique
-  password String
+  password String?
+  f_name String  @default("")
+  l_name String  @default("")
+  profile_pic_url String?
   verified  Boolean @default(false)
+  provider   String  @default("local")
 
 }

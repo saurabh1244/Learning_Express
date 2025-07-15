@@ -11,6 +11,33 @@
     "http"
   ],
   "paths": {
+    "/api/google-login": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "credential": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "description": "",
@@ -107,10 +134,19 @@
                 "username": {
                   "example": "any"
                 },
+                "f_name": {
+                  "example": "any"
+                },
+                "l_name": {
+                  "example": "any"
+                },
                 "password": {
                   "example": "any"
                 },
                 "email": {
+                  "example": "any"
+                },
+                "profile_pic_url": {
                   "example": "any"
                 }
               }
