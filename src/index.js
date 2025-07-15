@@ -9,6 +9,8 @@ const nodemailer = require('nodemailer');
 const verifyToken = require('./middleware/auth');
 const e = require('express');
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger/swagger_output.json');
 
 
 app.use(express.static('public'));
@@ -34,6 +36,8 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
+// #swagger.tags = ['Protected']
+// #swagger.security = [{ "bearerAuth": [] }]
 
 app.get('/root', verifyToken, (req, res) => {
   res.json({ message: "You are logged in", user: req.user });
@@ -226,6 +230,12 @@ app.post('/refresh_token', async (req,res)=>{
 
 })
 
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  swaggerOptions: {
+    persistAuthorization: true, // ✅ optional - keep token on refresh
+  },
+}));
 
 app.get('/api/users', async (req, res) => {
   const users = await prisma.user.findMany();
