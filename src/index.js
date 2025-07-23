@@ -24,6 +24,8 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 const SECRET_KEY = process.env.SECRET_KEY
+const PORT = process.env.PORT
+
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -301,6 +303,6 @@ app.get('/api/users', async (req, res) => {
 });
 
 
-app.listen(3001, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('Server running at http://localhost:3000');
 });
