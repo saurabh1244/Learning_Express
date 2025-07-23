@@ -42,9 +42,9 @@ pipeline {
                     echo 'Restarting server with PM2...'
                     sh '''
                     if pm2 list | grep -q backend; then
-                        pm2 restart backend
+                        pm2 restart learning_express_backend
                     else
-                        pm2 start src/index.js --name backend
+                        pm2 start src/index.js --name learning_express_backend
                     fi
                     '''
             }
